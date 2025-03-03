@@ -84,6 +84,16 @@ const CartPage = () => {
       return;
     }
 
+    // Stock validation before placing order
+    for (const item of cartItems) {
+      if (item.quantity > item.product.stock) {
+        alert(
+          `Not enough stock for ${item.product_name}. Available: ${item.product.stock}`
+        );
+        return;
+      }
+    }
+
     const orderData = {
       user_id: userId,
       shipping_address: shippingAddress,
@@ -99,14 +109,9 @@ const CartPage = () => {
 
     try {
       await axios.post(`http://127.0.0.1:8000/orders/${userId}`, orderData);
-
-      // Show success alert
       alert("Order placed successfully!");
       setOrderPlaced(true);
-      // Navigate to user dashboard after a short delay
-      setTimeout(() => {
-        navigate("/userdashboard");
-      }, 1000);
+      setTimeout(() => navigate("/userdashboard"), 1000);
     } catch (error) {
       setError("Failed to complete checkout.");
       console.error("Error during checkout:", error);
@@ -118,27 +123,24 @@ const CartPage = () => {
 
   return (
     <div className="container mt-5">
-      <h2 className="mb-4">Shopping Cart</h2>
-
-      {/* Back to Dashboard Button */}
+      <h2 className="mb-4 text-primary">Shopping Cart</h2>
       <button
-        className="btn btn-secondary mb-3"
+        className="btn btn-outline-secondary mb-3"
         onClick={() => navigate("/userdashboard")}
       >
         ← Back to Dashboard
       </button>
-
       {cartItems.length === 0 ? (
-        <p>Your cart is empty.</p>
+        <p className="alert alert-warning">Your cart is empty.</p>
       ) : (
         <>
-          {/* Cart Items Table */}
           <div className="table-responsive">
-            <table className="table table-bordered">
-              <thead className="thead-light">
+            <table className="table table-hover">
+              <thead className="thead-dark">
                 <tr>
                   <th>Product Name</th>
                   <th>Quantity</th>
+                  <th>Stock</th>
                   <th>Price</th>
                   <th>Total</th>
                   <th>Actions</th>
@@ -152,7 +154,8 @@ const CartPage = () => {
                       <input
                         type="number"
                         min="1"
-                        className="form-control"
+                        max={item.product.stock}
+                        className="form-control w-50 mx-auto"
                         value={item.quantity}
                         onChange={(e) =>
                           handleUpdateQuantity(
@@ -162,13 +165,16 @@ const CartPage = () => {
                         }
                       />
                     </td>
-                    <td>₹{item.product?.price ?? 0}</td>
-                    <td>
+                    <td>{item.product.stock}</td>
+                    <td className="text-success">
+                      ₹{item.product?.price ?? 0}
+                    </td>
+                    <td className="text-success">
                       ₹{((item.product?.price || 0) * item.quantity).toFixed(2)}
                     </td>
                     <td>
                       <button
-                        className="btn btn-danger"
+                        className="btn btn-danger btn-sm"
                         onClick={() => handleRemoveItem(item.id)}
                       >
                         Remove
@@ -179,36 +185,8 @@ const CartPage = () => {
               </tbody>
             </table>
           </div>
-
-          <h4 className="text-end">Total: ₹{calculateTotal()}</h4>
-
-          {/* Order Summary Table */}
-          <h5 className="mt-4">Order Summary</h5>
-          <table className="table table-bordered">
-            <tbody>
-              <tr>
-                <td>
-                  <strong>Total Products</strong>
-                </td>
-                <td>{cartItems.length}</td>
-              </tr>
-              <tr>
-                <td>
-                  <strong>Total Amount</strong>
-                </td>
-                <td>₹{calculateTotal()}</td>
-              </tr>
-              <tr>
-                <td>
-                  <strong>Payment Method</strong>
-                </td>
-                <td>{paymentMethod}</td>
-              </tr>
-            </tbody>
-          </table>
-
-          {/* Shipping and Payment Section */}
-          <div className="mt-4">
+          <h4 className="text-end text-info">Total: ₹{calculateTotal()}</h4>
+          <div className="border p-3 rounded shadow-sm bg-light">
             <h5>Shipping Details</h5>
             <input
               type="text"
@@ -217,7 +195,6 @@ const CartPage = () => {
               value={shippingAddress}
               onChange={(e) => setShippingAddress(e.target.value)}
             />
-
             <h5>Payment Method</h5>
             <select
               className="form-control mb-3"
@@ -229,14 +206,11 @@ const CartPage = () => {
               <option value="PayPal">PayPal</option>
               <option value="Cash on Delivery">Cash on Delivery</option>
             </select>
-
-            {/* Checkout Button */}
-            <button className="btn btn-success w-100" onClick={handleCheckout}>
+            <button className="btn btn-primary w-100" onClick={handleCheckout}>
               Proceed to Checkout
             </button>
-
             {orderPlaced && (
-              <div className="alert alert-success mt-3" role="alert">
+              <div className="alert alert-success mt-3">
                 Your order has been placed successfully!
               </div>
             )}

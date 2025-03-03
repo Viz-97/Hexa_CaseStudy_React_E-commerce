@@ -11,7 +11,7 @@ const AddProduct = () => {
     description: "",
     price: "",
     category: "",
-    image_url: "", // Consistent snake_case as per backend
+    image_url: "",
     stock: "",
   });
 
@@ -20,13 +20,9 @@ const AddProduct = () => {
   const navigate = useNavigate();
   const { authData } = useContext(AuthContext);
 
-  // Fallback to localStorage if authData is not available
   const sellerId = authData?.sellerId || localStorage.getItem("sellerId");
 
   useEffect(() => {
-    console.log("AuthContext Data:", authData);
-    console.log("Retrieved sellerId:", sellerId);
-
     if (!sellerId) {
       setError("Seller ID is undefined. Please log in again.");
       console.error("Seller ID is undefined. Check authData and localStorage.");
@@ -59,15 +55,17 @@ const AddProduct = () => {
       const response = await axios.post(
         `http://127.0.0.1:8000/products/${sellerId}`,
         formData,
-        console.log(response.data),
         { headers: { "Content-Type": "application/json" } }
       );
+      console.log("Response:", response.data);
       alert("Product added successfully!");
       navigate("/sellerdashboard");
     } catch (error) {
       const backendError =
-        error.response?.data?.detail || "Failed to add product.";
+        error.response?.data?.detail ||
+        "Failed to add product. Please try again.";
       setError(backendError);
+      console.error("Error:", backendError);
     } finally {
       setLoading(false);
     }
@@ -132,7 +130,7 @@ const AddProduct = () => {
             <input
               type="text"
               className="form-control"
-              name="image_url" // Consistent with backend
+              name="image_url"
               value={formData.image_url}
               onChange={handleChange}
               placeholder="https://example.com/image.jpg"
@@ -158,7 +156,18 @@ const AddProduct = () => {
             className="btn btn-primary w-100"
             disabled={loading || !sellerId}
           >
-            {loading ? "Adding..." : "Add Product"}
+            {loading ? (
+              <>
+                <span
+                  className="spinner-border spinner-border-sm me-2"
+                  role="status"
+                  aria-hidden="true"
+                ></span>
+                Adding...
+              </>
+            ) : (
+              "Add Product"
+            )}
           </button>
         </form>
       </div>

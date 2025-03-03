@@ -22,6 +22,21 @@ const UserDashboard = () => {
       });
   }, []);
 
+  useEffect(() => {
+    const userId = localStorage.getItem("userId");
+    if (userId) {
+      axios
+        .get(`http://127.0.0.1:8000/cart/${userId}`)
+        .then((response) => {
+          setCartCount(response.data.length);
+          setShowCartButton(response.data.length > 0);
+        })
+        .catch((error) => {
+          console.error("Error fetching cart data:", error);
+        });
+    }
+  }, []);
+
   const handleAddToCart = async (productId, quantity = 1) => {
     const userId = localStorage.getItem("userId");
 
@@ -50,19 +65,27 @@ const UserDashboard = () => {
   );
 
   return (
-    <div className="container-fluid bg-light min-vh-100 py-4">
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <h2 className="text-center">All Products</h2>
+    <div
+      className="container-fluid bg-gradient min-vh-100 py-4"
+      style={{ background: "linear-gradient(to right, #1e3c72, #2a5298)" }}
+    >
+      <div className="d-flex justify-content-between align-items-center mb-4 px-3 text-white">
+        <h1
+          className="fw-bold text-black"
+          style={{ textShadow: "2px 2px 4px rgba(0, 0, 0, 0.6)" }}
+        >
+          User Dashboard
+        </h1>
         <div>
           <LogoutButton />
           {showCartButton && (
             <button
-              className="btn btn-warning ms-3 position-relative"
+              className="btn btn-warning ms-3 position-relative shadow-lg rounded-pill px-4 py-2"
               onClick={() => navigate("/cart/:userId")}
             >
               🛒 Cart{" "}
               {cartCount > 0 && (
-                <span className="badge bg-danger position-absolute top-0 start-100 translate-middle">
+                <span className="badge bg-danger position-absolute top-0 start-100 translate-middle rounded-circle">
                   {cartCount}
                 </span>
               )}
@@ -71,53 +94,58 @@ const UserDashboard = () => {
         </div>
       </div>
 
-      <div className="input-group mb-3 w-50 mx-auto">
+      <div className="input-group mb-4 w-50 mx-auto shadow-sm rounded-pill overflow-hidden">
         <input
           type="text"
-          className="form-control"
-          placeholder="Search products..."
+          className="form-control border-0 px-4"
+          placeholder="🔍 Search for products..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
-        <span className="input-group-text bg-primary text-white">Search</span>
+        <span className="input-group-text bg-primary text-white border-0 px-4">
+          Search
+        </span>
       </div>
 
       <div className="row row-cols-1 row-cols-md-3 g-4">
         {filteredProducts.length > 0 ? (
           filteredProducts.map((product) => (
             <div key={product.id} className="col">
-              <div className="card h-100 shadow-sm">
+              <div className="card h-100 shadow-lg border-0 rounded-4 overflow-hidden">
                 <img
                   src={product.image_url}
-                  className="card-img-top"
+                  className="card-img-top rounded-top-4"
                   alt={product.name}
-                  style={{ height: "200px", objectFit: "contain" }}
+                  style={{ height: "250px", width: "100%", objectFit: "cover" }}
                 />
-                <div className="card-body d-flex flex-column">
-                  <h5 className="card-title">{product.name}</h5>
-                  <p className="card-text">
-                    <strong>Description:</strong> {product.description}
+                <div className="card-body d-flex flex-column bg-white">
+                  <h5 className="card-title text-primary fw-bold">
+                    {product.name}
+                  </h5>
+                  <p className="card-text text-secondary">
+                    {product.description}
                   </p>
-                  <p className="card-text">
-                    <strong>Price:</strong> ₹{product.price}
-                  </p>
-                  <p className="card-text">
-                    <strong>Category:</strong> {product.category}
+                  <p className="fw-bold text-dark">
+                    💰 Price: ₹{product.price}
                   </p>
                   <button
-                    className="btn btn-primary mt-auto"
+                    className="btn btn-success mt-auto shadow-sm rounded-pill px-4 py-2"
                     onClick={() => handleAddToCart(product.id)}
                   >
-                    Add to Cart
+                    ➕ Add to Cart
                   </button>
                 </div>
               </div>
             </div>
           ))
         ) : (
-          <h2 className="text-center">No products available.</h2>
+          <h2 className="text-center text-muted">No products available.</h2>
         )}
       </div>
+
+      <footer className="bg-dark text-white text-center py-3 mt-5 w-100">
+        <p className="mb-0">&copy; 2024 E-commerce | All Rights Reserved</p>
+      </footer>
     </div>
   );
 };
